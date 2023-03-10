@@ -39,6 +39,7 @@ import org.odk.collect.android.widgets.interfaces.ButtonClickListener;
 import org.odk.collect.android.widgets.utilities.WaitingForDataRegistry;
 import org.odk.collect.androidshared.system.CameraUtils;
 import org.odk.collect.selfiecamera.CaptureSelfieActivity;
+import org.odk.collect.settings.keys.ProjectKeys;
 
 import java.io.File;
 import java.util.Locale;
@@ -131,13 +132,10 @@ public class ImageWidget extends BaseImageWidget implements ButtonClickListener 
 
     @Override
     public void onButtonClick(int buttonId) {
-        switch (buttonId) {
-            case R.id.capture_image:
-                getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureImage);
-                break;
-            case R.id.choose_image:
-                imageCaptureHandler.chooseImage(R.string.choose_image);
-                break;
+        if (buttonId == R.id.capture_image) {
+            getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureImage);
+        } else if (buttonId == R.id.choose_image) {
+            imageCaptureHandler.chooseImage(R.string.choose_image);
         }
     }
 
@@ -165,8 +163,9 @@ public class ImageWidget extends BaseImageWidget implements ButtonClickListener 
             // the size. boo.
 
             try {
+                //TODO f
                 Uri uri = new ContentUriProvider().getUriForFile(getContext(),
-                        BuildConfig.APPLICATION_ID + ".provider",
+                        ProjectKeys.APP_PROVIDER + ".provider",
                         new File(tmpImageFilePath));
                 // if this gets modified, the onActivityResult in
                 // FormEntyActivity will also need to be updated.

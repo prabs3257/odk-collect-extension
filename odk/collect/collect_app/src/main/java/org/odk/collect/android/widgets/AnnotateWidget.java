@@ -35,6 +35,7 @@ import org.odk.collect.android.utilities.FileUtils;
 import org.odk.collect.android.utilities.QuestionMediaManager;
 import org.odk.collect.android.widgets.interfaces.ButtonClickListener;
 import org.odk.collect.android.widgets.utilities.WaitingForDataRegistry;
+import org.odk.collect.settings.keys.ProjectKeys;
 
 import java.io.File;
 import java.util.Locale;
@@ -130,13 +131,10 @@ public class AnnotateWidget extends BaseImageWidget implements ButtonClickListen
 
     @Override
     public void onButtonClick(int buttonId) {
-        switch (buttonId) {
-            case R.id.capture_image:
-                getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureImage);
-                break;
-            case R.id.choose_image:
-                imageCaptureHandler.chooseImage(R.string.annotate_image);
-                break;
+        if (buttonId == R.id.capture_image) {
+            getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureImage);
+        } else if (buttonId == R.id.choose_image) {
+            imageCaptureHandler.chooseImage(R.string.annotate_image);
         }
     }
 
@@ -175,8 +173,9 @@ public class AnnotateWidget extends BaseImageWidget implements ButtonClickListen
         // the size. boo.
 
         try {
+            //TODO pass from apps
             Uri uri = new ContentUriProvider().getUriForFile(getContext(),
-                    BuildConfig.APPLICATION_ID + ".provider",
+                    ProjectKeys.APP_PROVIDER + ".provider",
                     new File(tmpImageFilePath));
             // if this gets modified, the onActivityResult in
             // FormEntyActivity will also need to be updated.

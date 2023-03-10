@@ -73,4 +73,6 @@ object ProjectKeys {
     const val BASEMAP_SOURCE_USGS = "usgs"
     const val BASEMAP_SOURCE_STAMEN = "stamen"
     const val BASEMAP_SOURCE_CARTO = "carto"
+
+    const val APP_PROVIDER = "";
 }

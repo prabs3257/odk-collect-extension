@@ -7,9 +7,10 @@ public final class AndroidUserAgent implements UserAgentProvider {
 
     @Override
     public String getUserAgent() {
+        //TODO pass from Apps
         return String.format("%s/%s %s",
-                BuildConfig.APPLICATION_ID,
-                BuildConfig.VERSION_NAME,
+                "org.odk.collect.collect_app",
+                1,
                 System.getProperty("http.agent"));
     }
 
