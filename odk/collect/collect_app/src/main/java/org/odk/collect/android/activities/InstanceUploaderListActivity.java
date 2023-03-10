@@ -255,13 +255,13 @@ public class InstanceUploaderListActivity extends InstanceListActivity implement
             return true;
         }
 
-        switch (item.getItemId()) {
-            case R.id.menu_preferences:
-                createPreferencesMenu();
-                return true;
-            case R.id.menu_change_view:
-                showSentAndUnsentChoices();
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_preferences) {
+            createPreferencesMenu();
+            return true;
+        } else if (itemId == R.id.menu_change_view) {
+            showSentAndUnsentChoices();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

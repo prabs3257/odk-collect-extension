@@ -648,8 +648,8 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
 
             if (candidateForms.isEmpty()) {
                 createErrorDialog(getString(
-                        R.string.parent_form_not_present,
-                        instance.getFormId())
+                                R.string.parent_form_not_present,
+                                instance.getFormId())
                                 + ((instance.getFormVersion() == null) ? ""
                                 : "\n" + getString(R.string.version) + " " + instance.getFormVersion()),
                         true);
@@ -848,62 +848,35 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
             return;
         }
 
-        switch (requestCode) {
-            case RequestCodes.OSM_CAPTURE:
-                AnalyticsUtils.logFormEvent(OPEN_MAP_KIT_RESPONSE);
-                setWidgetData(intent.getStringExtra("OSM_FILE_NAME"));
-                break;
-            case RequestCodes.EX_ARBITRARY_FILE_CHOOSER:
-            case RequestCodes.EX_VIDEO_CHOOSER:
-            case RequestCodes.EX_IMAGE_CHOOSER:
-            case RequestCodes.EX_AUDIO_CHOOSER:
-                if (intent.getClipData() != null
-                        && intent.getClipData().getItemCount() > 0
-                        && intent.getClipData().getItemAt(0) != null) {
-                    loadMedia(intent.getClipData().getItemAt(0).getUri());
-                } else {
-                    setWidgetData(null);
+        if (requestCode == RequestCodes.OSM_CAPTURE) {
+            AnalyticsUtils.logFormEvent(OPEN_MAP_KIT_RESPONSE);
+            setWidgetData(intent.getStringExtra("OSM_FILE_NAME"));
+        } else if (requestCode == RequestCodes.EX_ARBITRARY_FILE_CHOOSER || requestCode == RequestCodes.EX_VIDEO_CHOOSER || requestCode == RequestCodes.EX_IMAGE_CHOOSER || requestCode == RequestCodes.EX_AUDIO_CHOOSER) {
+            if (intent.getClipData() != null
+                    && intent.getClipData().getItemCount() > 0
+                    && intent.getClipData().getItemAt(0) != null) {
+                loadMedia(intent.getClipData().getItemAt(0).getUri());
+            } else {
+                setWidgetData(null);
+            }
+        } else if (requestCode == RequestCodes.EX_GROUP_CAPTURE) {
+            try {
+                Bundle extras = intent.getExtras();
+                if (getCurrentViewIfODKView() != null) {
+                    getCurrentViewIfODKView().setDataForFields(extras);
                 }
-                break;
-            case RequestCodes.EX_GROUP_CAPTURE:
-                try {
-                    Bundle extras = intent.getExtras();
-                    if (getCurrentViewIfODKView() != null) {
-                        getCurrentViewIfODKView().setDataForFields(extras);
-                    }
-                } catch (JavaRosaException e) {
-                    Timber.e(e);
-                    createErrorDialog(e.getCause().getMessage(), false);
-                }
-                break;
-            case RequestCodes.DRAW_IMAGE:
-            case RequestCodes.ANNOTATE_IMAGE:
-            case RequestCodes.SIGNATURE_CAPTURE:
-            case RequestCodes.IMAGE_CAPTURE:
-                loadMedia(Uri.fromFile(new File(storagePathProvider.getTmpImageFilePath())));
-                break;
-            case RequestCodes.ALIGNED_IMAGE:
-            case RequestCodes.ARBITRARY_FILE_CHOOSER:
-            case RequestCodes.AUDIO_CAPTURE:
-            case RequestCodes.AUDIO_CHOOSER:
-            case RequestCodes.VIDEO_CAPTURE:
-            case RequestCodes.VIDEO_CHOOSER:
-            case RequestCodes.IMAGE_CHOOSER:
-                loadMedia(intent.getData());
-                break;
-            case RequestCodes.LOCATION_CAPTURE:
-            case RequestCodes.GEOSHAPE_CAPTURE:
-            case RequestCodes.GEOTRACE_CAPTURE:
-            case RequestCodes.BEARING_CAPTURE:
-            case RequestCodes.BARCODE_CAPTURE:
-            case RequestCodes.EX_STRING_CAPTURE:
-            case RequestCodes.EX_INT_CAPTURE:
-            case RequestCodes.EX_DECIMAL_CAPTURE:
-                setWidgetData(ExternalAppUtils.getReturnedSingleValue(intent));
-                break;
-            case RequestCodes.MEDIA_FILE_PATH:
-                loadMedia(Uri.fromFile(new File((String) ExternalAppUtils.getReturnedSingleValue(intent))));
-                break;
+            } catch (JavaRosaException e) {
+                Timber.e(e);
+                createErrorDialog(e.getCause().getMessage(), false);
+            }
+        } else if (requestCode == RequestCodes.DRAW_IMAGE || requestCode == RequestCodes.ANNOTATE_IMAGE || requestCode == RequestCodes.SIGNATURE_CAPTURE || requestCode == RequestCodes.IMAGE_CAPTURE) {
+            loadMedia(Uri.fromFile(new File(storagePathProvider.getTmpImageFilePath())));
+        } else if (requestCode == RequestCodes.ALIGNED_IMAGE || requestCode == RequestCodes.ARBITRARY_FILE_CHOOSER || requestCode == RequestCodes.AUDIO_CAPTURE || requestCode == RequestCodes.AUDIO_CHOOSER || requestCode == RequestCodes.VIDEO_CAPTURE || requestCode == RequestCodes.VIDEO_CHOOSER || requestCode == RequestCodes.IMAGE_CHOOSER) {
+            loadMedia(intent.getData());
+        } else if (requestCode == RequestCodes.LOCATION_CAPTURE || requestCode == RequestCodes.GEOSHAPE_CAPTURE || requestCode == RequestCodes.GEOTRACE_CAPTURE || requestCode == RequestCodes.BEARING_CAPTURE || requestCode == RequestCodes.BARCODE_CAPTURE || requestCode == RequestCodes.EX_STRING_CAPTURE || requestCode == RequestCodes.EX_INT_CAPTURE || requestCode == RequestCodes.EX_DECIMAL_CAPTURE) {
+            setWidgetData(ExternalAppUtils.getReturnedSingleValue(intent));
+        } else if (requestCode == RequestCodes.MEDIA_FILE_PATH) {
+            loadMedia(Uri.fromFile(new File((String) ExternalAppUtils.getReturnedSingleValue(intent))));
         }
     }
 
@@ -997,15 +970,13 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         }
 
         // These actions should move into the `FormEntryMenuDelegate`
-        switch (item.getItemId()) {
-            case R.id.menu_languages:
-                createLanguageDialog();
-                return true;
-
-            case R.id.menu_save:
-                // don't exit
-                saveForm(false, InstancesDaoHelper.isInstanceComplete(false, settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT), getFormController()), null, true);
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_languages) {
+            createLanguageDialog();
+            return true;
+        } else if (itemId == R.id.menu_save) {// don't exit
+            saveForm(false, InstancesDaoHelper.isInstanceComplete(false, settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT), getFormController()), null, true);
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -1125,67 +1096,127 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         if (event != FormEntryController.EVENT_QUESTION) {
             formController.getAuditEventLogger().logEvent(AuditEvent.getAuditEventTypeFromFecType(event),
                     formController.getFormIndex(), true, null, System.currentTimeMillis(), null);
-        }
+            switch (event) {
+                case FormEntryController.EVENT_BEGINNING_OF_FORM:
+                    return createViewForFormBeginning(formController);
+                case FormEntryController.EVENT_END_OF_FORM:
+                    return createViewForFormEnd(formController);
+                case FormEntryController.EVENT_QUESTION:
+                case FormEntryController.EVENT_GROUP:
+                case FormEntryController.EVENT_REPEAT:
+                    // should only be a group here if the event_group is a field-list
+                    try {
+                        AuditUtils.logCurrentScreen(formController, formController.getAuditEventLogger(), System.currentTimeMillis());
 
-        switch (event) {
-            case FormEntryController.EVENT_BEGINNING_OF_FORM:
-                return createViewForFormBeginning(formController);
-            case FormEntryController.EVENT_END_OF_FORM:
-                return createViewForFormEnd(formController);
-            case FormEntryController.EVENT_QUESTION:
-            case FormEntryController.EVENT_GROUP:
-            case FormEntryController.EVENT_REPEAT:
-                // should only be a group here if the event_group is a field-list
-                try {
-                    AuditUtils.logCurrentScreen(formController, formController.getAuditEventLogger(), System.currentTimeMillis());
+                        FormEntryCaption[] groups = formController
+                                .getGroupsForCurrentIndex();
+                        FormEntryPrompt[] prompts = formController.getQuestionPrompts();
 
-                    FormEntryCaption[] groups = formController
-                            .getGroupsForCurrentIndex();
-                    FormEntryPrompt[] prompts = formController.getQuestionPrompts();
-
-                    odkView = createODKView(advancingPage, prompts, groups);
-                    odkView.setWidgetValueChangedListener(this);
-                    Timber.i("Created view for group %s %s",
-                            groups.length > 0 ? groups[groups.length - 1].getLongText() : "[top]",
-                            prompts.length > 0 ? prompts[0].getQuestionText() : "[no question]");
-                } catch (RuntimeException | RepeatsInFieldListException e) {
-                    if (e instanceof RuntimeException) {
-                        Timber.e(e);
+                        odkView = createODKView(advancingPage, prompts, groups);
+                        odkView.setWidgetValueChangedListener(this);
+                        Timber.i("Created view for group %s %s",
+                                groups.length > 0 ? groups[groups.length - 1].getLongText() : "[top]",
+                                prompts.length > 0 ? prompts[0].getQuestionText() : "[no question]");
+                    } catch (RuntimeException | RepeatsInFieldListException e) {
+                        if (e instanceof RuntimeException) {
+                            Timber.e(e);
+                        }
+                        // this is badness to avoid a crash.
+                        try {
+                            event = formController.stepToNextScreenEvent();
+                            createErrorDialog(e.getMessage(), false);
+                        } catch (JavaRosaException e1) {
+                            Timber.d(e1);
+                            createErrorDialog(e.getMessage() + "\n\n" + e1.getCause().getMessage(),
+                                    false);
+                        }
+                        return createView(event, advancingPage);
                     }
+
+                    if (showNavigationButtons) {
+                        updateNavigationButtonVisibility();
+                    }
+
+                    return odkView;
+
+                case EVENT_PROMPT_NEW_REPEAT:
+                    createRepeatDialog();
+                    return new EmptyView(this);
+
+                default:
+                    Timber.e(new Error("Attempted to create a view that does not exist."));
                     // this is badness to avoid a crash.
                     try {
                         event = formController.stepToNextScreenEvent();
-                        createErrorDialog(e.getMessage(), false);
-                    } catch (JavaRosaException e1) {
-                        Timber.d(e1);
-                        createErrorDialog(e.getMessage() + "\n\n" + e1.getCause().getMessage(),
-                                false);
+                        createErrorDialog(getString(R.string.survey_internal_error), true);
+                    } catch (JavaRosaException e) {
+                        Timber.d(e);
+                        createErrorDialog(e.getCause().getMessage(), true);
                     }
                     return createView(event, advancingPage);
-                }
+            }
+        } else {
+            switch (event) {
+                case FormEntryController.EVENT_BEGINNING_OF_FORM:
+                    return createViewForFormBeginning(formController);
+                case FormEntryController.EVENT_END_OF_FORM:
+                    return createViewForFormEnd(formController);
+                case FormEntryController.EVENT_QUESTION:
+                case FormEntryController.EVENT_GROUP:
+                case FormEntryController.EVENT_REPEAT:
+                    // should only be a group here if the event_group is a field-list
+                    try {
+                        AuditUtils.logCurrentScreen(formController, formController.getAuditEventLogger(), System.currentTimeMillis());
 
-                if (showNavigationButtons) {
-                    updateNavigationButtonVisibility();
-                }
+                        FormEntryCaption[] groups = formController
+                                .getGroupsForCurrentIndex();
+                        FormEntryPrompt[] prompts = formController.getQuestionPrompts();
 
-                return odkView;
+                        odkView = createODKView(advancingPage, prompts, groups);
+                        odkView.setWidgetValueChangedListener(this);
+                        Timber.i("Created view for group %s %s",
+                                groups.length > 0 ? groups[groups.length - 1].getLongText() : "[top]",
+                                prompts.length > 0 ? prompts[0].getQuestionText() : "[no question]");
+                    } catch (RuntimeException | RepeatsInFieldListException e) {
+                        if (e instanceof RuntimeException) {
+                            Timber.e(e);
+                        }
+                        // this is badness to avoid a crash.
+                        try {
+                            event = formController.stepToNextScreenEvent();
+                            createErrorDialog(e.getMessage(), false);
+                        } catch (JavaRosaException e1) {
+                            Timber.d(e1);
+                            createErrorDialog(e.getMessage() + "\n\n" + e1.getCause().getMessage(),
+                                    false);
+                        }
+                        return createView(event, advancingPage);
+                    }
 
-            case EVENT_PROMPT_NEW_REPEAT:
-                createRepeatDialog();
-                return new EmptyView(this);
+                    if (showNavigationButtons) {
+                        updateNavigationButtonVisibility();
+                    }
 
-            default:
-                Timber.e(new Error("Attempted to create a view that does not exist."));
-                // this is badness to avoid a crash.
-                try {
-                    event = formController.stepToNextScreenEvent();
-                    createErrorDialog(getString(R.string.survey_internal_error), true);
-                } catch (JavaRosaException e) {
-                    Timber.d(e);
-                    createErrorDialog(e.getCause().getMessage(), true);
-                }
-                return createView(event, advancingPage);
+                    return odkView;
+
+                case EVENT_PROMPT_NEW_REPEAT:
+                    createRepeatDialog();
+                    return new EmptyView(this);
+
+                default:
+                    Timber.e(new Error("Attempted to create a view that does not exist."));
+                    // this is badness to avoid a crash.
+                    try {
+                        event = formController.stepToNextScreenEvent();
+                        createErrorDialog(getString(R.string.survey_internal_error), true);
+                    } catch (JavaRosaException e) {
+                        Timber.d(e);
+                        createErrorDialog(e.getCause().getMessage(), true);
+                    }
+                    return createView(event, advancingPage);
+            }
         }
+
     }
 
     @NotNull

@@ -188,20 +188,16 @@ public class VideoWidget extends QuestionWidget implements FileWidget, ButtonCli
 
     @Override
     public void onButtonClick(int id) {
-        switch (id) {
-            case R.id.capture_video:
-                if (selfie) {
-                    getPermissionsProvider().requestCameraAndRecordAudioPermissions((Activity) getContext(), this::captureVideo);
-                } else {
-                    getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureVideo);
-                }
-                break;
-            case R.id.choose_video:
-                chooseVideo();
-                break;
-            case R.id.play_video:
-                playVideoFile();
-                break;
+        if (id == R.id.capture_video) {
+            if (selfie) {
+                getPermissionsProvider().requestCameraAndRecordAudioPermissions((Activity) getContext(), this::captureVideo);
+            } else {
+                getPermissionsProvider().requestCameraPermission((Activity) getContext(), this::captureVideo);
+            }
+        } else if (id == R.id.choose_video) {
+            chooseVideo();
+        } else if (id == R.id.play_video) {
+            playVideoFile();
         }
     }
 

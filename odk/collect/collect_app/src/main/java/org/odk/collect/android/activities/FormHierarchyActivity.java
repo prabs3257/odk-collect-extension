@@ -68,6 +68,9 @@ public class FormHierarchyActivity extends CollectAbstractActivity implements De
 
     public static final int RESULT_ADD_REPEAT = 2;
     public static final String EXTRA_SESSION_ID = "session_id";
+
+    public static final String EXTRA_JUMP_TO_BEGINNING = "jump_to_beginning";
+
     /**
      * The questions and repeats at the current level.
      * Recreated every time {@link #refreshView()} is called.
@@ -274,26 +277,22 @@ public class FormHierarchyActivity extends CollectAbstractActivity implements De
             return true;
         }
 
-        switch (item.getItemId()) {
-            case R.id.menu_delete_child:
-                DialogFragmentUtils.showIfNotShowing(DeleteRepeatDialogFragment.class, getSupportFragmentManager());
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_delete_child) {
+            DialogFragmentUtils.showIfNotShowing(DeleteRepeatDialogFragment.class, getSupportFragmentManager());
+            return true;
+        } else if (itemId == R.id.menu_add_repeat) {
+            formEntryViewModel.getFormController().jumpToIndex(repeatGroupPickerIndex);
+            formEntryViewModel.jumpToNewRepeat();
+            formEntryViewModel.addRepeat();
 
-            case R.id.menu_add_repeat:
-                formEntryViewModel.getFormController().jumpToIndex(repeatGroupPickerIndex);
-                formEntryViewModel.jumpToNewRepeat();
-                formEntryViewModel.addRepeat();
-
-                finish();
-                return true;
-
-            case R.id.menu_go_up:
-                goUpLevel();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+            finish();
+            return true;
+        } else if (itemId == R.id.menu_go_up) {
+            goUpLevel();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
