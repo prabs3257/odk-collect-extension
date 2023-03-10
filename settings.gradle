@@ -29,6 +29,7 @@ include ':odk:collect:collect_app'
 include ':odk:collect:crash-handler'
 include ':odk:collect:entities'
 include ':odk:collect:selfie-camera'
+include ':odk:extension'
 
 apply from: 'secrets.gradle'
 if (getSecrets().getProperty('MAPBOX_DOWNLOADS_TOKEN', '') != '') {
