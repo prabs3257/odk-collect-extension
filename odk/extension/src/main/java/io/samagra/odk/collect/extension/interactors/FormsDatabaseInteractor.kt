@@ -2,8 +2,11 @@ package io.samagra.odk.collect.extension.interactors
 
 import org.odk.collect.forms.Form
 
-/** Main interactor to communicate with the database regarding forms
- *  information.
+/** The FormsDatabaseInteractor interface provides a set of methods to interact with the local forms
+ *  database. This interface enables developers to manage the forms that are stored on the device,
+ *  including retrieving, adding, and deleting forms.
+ *
+ *  @author Chinmoy Chakraborty
  */
 interface FormsDatabaseInteractor {
 

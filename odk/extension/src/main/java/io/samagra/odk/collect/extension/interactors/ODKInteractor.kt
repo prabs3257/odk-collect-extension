@@ -4,9 +4,14 @@ import android.content.Context
 import io.samagra.odk.collect.extension.listeners.FormsProcessListener
 import io.samagra.odk.collect.extension.listeners.ODKProcessListener
 
-/** Main interface to interact with ODK.
- *  Typically this interface should be used to carry out all the
- *  operations instead of using sub components.
+/** The OdkInteractor interface is a key component of the ODK Interactor Module, which provides
+ * developers with methods for setting up, configuring, and resetting ODK, as well as opening a form.
+ * Using a JSON string, developers can configure ODK by pulling configuration information from a JSON
+ * file. The open form functionality not only ensures that the form exists on the device, but also
+ * checks for the required XML file and media files. If these files are not present on the device,
+ * the module will automatically download them from the server.
+ *
+ * @author Chinmoy Chakraborty
  */
 interface ODKInteractor {
 
