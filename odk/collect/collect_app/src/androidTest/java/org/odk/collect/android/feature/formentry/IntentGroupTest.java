@@ -57,6 +57,7 @@ import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.support.rules.FormActivityTestRule;
 import org.odk.collect.android.support.rules.TestRuleChain;
 import org.odk.collect.androidtest.RecordedIntentsRule;
+import org.odk.collect.settings.keys.ProjectKeys;
 
 import java.io.File;
 import java.io.IOException;
@@ -253,6 +254,6 @@ public class IntentGroupTest {
     }
 
     private Uri getUriForFile(File file) {
-        return FileProvider.getUriForFile(Collect.getInstance(), BuildConfig.APPLICATION_ID + ".provider", file);
+        return FileProvider.getUriForFile(Collect.getInstance(), ProjectKeys.APP_PROVIDER + ".provider", file);
     }
 }
