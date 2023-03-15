@@ -18,6 +18,9 @@ import static org.odk.collect.settings.keys.ProjectKeys.KEY_PROTOCOL;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,6 +33,8 @@ import android.widget.ListView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.lifecycle.LiveData;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -109,6 +114,19 @@ public class InstanceUploaderListActivity extends InstanceListActivity implement
         setTitle(getString(R.string.send_data));
         binding = InstanceUploaderListBinding.inflate(LayoutInflater.from(this));
         setContentView(binding.getRoot());
+        // WARNING: Custom ODK changes
+        getWindow().setStatusBarColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_PRIMARY_COLOR)));
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setBackgroundColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_BACKGROUND_COLOR)));
+            toolbar.setTitleTextColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)));
+            Drawable drawable = toolbar.getOverflowIcon();
+            if (drawable != null) {
+                drawable = DrawableCompat.wrap(drawable);
+                DrawableCompat.setTint(drawable.mutate(), getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)));
+                toolbar.setOverflowIcon(drawable);
+            }
+        }
         binding.uploadButton.setOnClickListener(v -> onUploadButtonsClicked());
         if (savedInstanceState != null) {
             showAllMode = savedInstanceState.getBoolean(SHOW_ALL_MODE);
@@ -246,7 +264,18 @@ public class InstanceUploaderListActivity extends InstanceListActivity implement
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.instance_uploader_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+        boolean isSuccessful = super.onCreateOptionsMenu(menu);
+        // WARNING: Custom ODK changes
+        for (int i = 0; i < menu.size(); i++) {
+            Drawable menuIcon = menu.getItem(i).getIcon();
+            if (menuIcon != null) {
+                menu.getItem(i).getIcon().setColorFilter(
+                        getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)),
+                        PorterDuff.Mode.SRC_IN
+                );
+            }
+        }
+        return isSuccessful;
     }
 
     @Override
@@ -387,5 +416,16 @@ public class InstanceUploaderListActivity extends InstanceListActivity implement
                 }).create();
         alertDialog.show();
         return true;
+    }
+
+    // WARNING: Custom ODK changes
+    private int getColor(String hash) {
+        try {
+            return Color.parseColor(hash);
+        }
+        catch (Exception e) {
+            Timber.e(new IllegalArgumentException("Invalid color hash"));
+            return 0xffffff;
+        }
     }
 }

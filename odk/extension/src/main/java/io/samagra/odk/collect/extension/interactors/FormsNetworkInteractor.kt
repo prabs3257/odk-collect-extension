@@ -5,11 +5,11 @@ import org.odk.collect.android.formmanagement.ServerFormDetails
 import org.odk.collect.android.listeners.DownloadFormsTaskListener
 import org.odk.collect.android.listeners.FormListDownloaderListener
 
-/** Main interface to carry out network interactions. Clubs together different Network based
- * modules into a single unit with some additional functionality.
- * Depends on [NetworkStorageInteractor] and [NetworkFormsInteractor].
- * Generally, all the network related tasks should be carried out through this interface
- * instead of individually using [NetworkStorageInteractor] or [NetworkFormsInteractor].
+/** FormsNetworkInteractor interface provides a set of methods to interact with the server to
+ * download and manage ODK forms. This interface enables developers to manage the forms that are
+ * available on the server, including retrieving forms.
+ *
+ * @author Chinmoy Chakraborty
  */
 interface FormsNetworkInteractor {
 

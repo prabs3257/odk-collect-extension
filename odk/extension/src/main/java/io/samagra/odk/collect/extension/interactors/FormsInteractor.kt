@@ -4,7 +4,11 @@ import android.content.Context
 import io.samagra.odk.collect.extension.listeners.FormsProcessListener
 import org.odk.collect.forms.Form
 
-/** Main interface to interact with forms. */
+/** FormsInteractor Interface provides methods to interact with ODK forms. Developers can use this
+ * interface to open a form with a specific form ID or MD5 hash and also pre-fill form values.
+ *
+ * @author Chinmoy Chakraborty
+ */
 interface FormsInteractor {
 
     /** Opens the latest version related to the formId. */

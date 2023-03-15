@@ -164,6 +164,11 @@ public class FormHierarchyActivity extends CollectAbstractActivity implements De
 
         configureButtons(formController);
 
+        // WARNING: Custom ODK Changes
+        if (getIntent().getBooleanExtra(FormHierarchyActivity.EXTRA_JUMP_TO_BEGINNING, false)) {
+            jumpBeginningButton.callOnClick();
+        }
+
         restoreInstanceState(savedInstanceState);
 
         refreshView();

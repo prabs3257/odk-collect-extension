@@ -37,6 +37,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -51,10 +54,12 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -63,6 +68,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
@@ -264,6 +270,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
 
     private FormLoaderTask formLoaderTask;
 
+    private LinearLayout buttonHolder;
     private TextView nextButton;
     private TextView backButton;
 
@@ -404,8 +411,12 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         errorMessage = null;
 
         questionHolder = findViewById(R.id.questionholder);
+        buttonHolder = findViewById(R.id.buttonholder);
 
+        // WARNING: ODK Custom Change
+        getWindow().setStatusBarColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_PRIMARY_COLOR)));
         initToolbar();
+        buttonHolder.setBackgroundColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_FOOTER_COLOR)));
 
         formIndexAnimationHandler = new FormIndexAnimationHandler(this);
         menuDelegate = new FormEntryMenuDelegate(
@@ -423,11 +434,43 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
             swipeHandler.setBeenSwiped(true);
             onSwipeForward();
         });
+        // WARNING: ODK Custom changes
+        nextButton.setBackgroundColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_BACKGROUND_COLOR)));
+        nextButton.setTextColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_FOREGROUND_COLOR)));
+        nextButton.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                nextButton.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                Drawable nextArrow = nextButton.getCompoundDrawables()[2];
+                if (nextArrow != null) {
+                    nextArrow.setColorFilter(
+                            getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_FOREGROUND_COLOR)),
+                            PorterDuff.Mode.SRC_IN
+                    );
+                }
+            }
+        });
 
         backButton = findViewById(R.id.form_back_button);
         backButton.setOnClickListener(v -> {
             swipeHandler.setBeenSwiped(true);
             onSwipeBackward();
+        });
+        // WARNING: ODK Custom changes
+        backButton.setBackgroundColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_BACKGROUND_COLOR)));
+        backButton.setTextColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_FOREGROUND_COLOR)));
+        backButton.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                backButton.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                Drawable backArrow = backButton.getCompoundDrawables()[0];
+                if (backArrow != null) {
+                    backArrow.setColorFilter(
+                            getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_NAVIGATION_FOREGROUND_COLOR)),
+                            PorterDuff.Mode.SRC_IN
+                    );
+                }
+            }
         });
 
         if (savedInstanceState == null) {
@@ -735,9 +778,28 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         return null;
     }
 
+    // WARNING: ODK Custom Changes
+    private int getColor(String hash) {
+        try {
+            return Color.parseColor(hash);
+        }
+        catch (Exception e) {
+            Timber.e(new IllegalArgumentException("Invalid color hash"));
+            return 0xffffff;
+        }
+    }
 
     private void initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
+        // WARNING: ODK Custom Change
+        toolbar.setBackgroundColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_BACKGROUND_COLOR)));
+        toolbar.setTitleTextColor(getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)));
+        Drawable drawable = toolbar.getOverflowIcon();
+        if (drawable != null) {
+            drawable = DrawableCompat.wrap(drawable);
+            DrawableCompat.setTint(drawable.mutate(), getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)));
+            toolbar.setOverflowIcon(drawable);
+        }
         setSupportActionBar(toolbar);
         setTitle(getString(R.string.loading_form));
     }
@@ -949,7 +1011,17 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menuDelegate.onCreateOptionsMenu(getMenuInflater(), menu);
-        return super.onCreateOptionsMenu(menu);
+        boolean isSuccessful = super.onCreateOptionsMenu(menu);
+        for (int i = 0; i < menu.size(); i++) {
+            Drawable menuIcon = menu.getItem(i).getIcon();
+            if (menuIcon != null) {
+                menu.getItem(i).getIcon().setColorFilter(
+                        getColor(settingsProvider.getUnprotectedSettings().getString(ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR)),
+                        PorterDuff.Mode.SRC_IN
+                );
+            }
+        }
+        return isSuccessful;
     }
 
     @Override
@@ -974,8 +1046,18 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         if (itemId == R.id.menu_languages) {
             createLanguageDialog();
             return true;
-        } else if (itemId == R.id.menu_save) {// don't exit
-            saveForm(false, InstancesDaoHelper.isInstanceComplete(false, settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT), getFormController()), null, true);
+        } else if (itemId == R.id.menu_save) {
+            // WARNING: Custom ODK Change, exit on save
+            saveForm(
+                    settingsProvider.getProtectedSettings().getBoolean(ProtectedProjectKeys.KEY_EXIT_ON_SAVE),
+                    InstancesDaoHelper.isInstanceComplete(
+                            false,
+                            settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT),
+                            getFormController()
+                    ),
+                    null,
+                    true
+            );
             return true;
         }
 
@@ -2021,8 +2103,14 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                     DialogFragmentUtils.showIfNotShowing(RecordingWarningDialogFragment.class, getSupportFragmentManager());
                     return true;
                 }
-
-                showIfNotShowing(QuitFormDialogFragment.class, getSupportFragmentManager());
+                // WARNING: Custom ODK Changes, back button behaviour changed
+                FormController formController = getFormController();
+                if (!settingsProvider.getProtectedSettings().getBoolean(ProtectedProjectKeys.KEY_EXIT_ON_BACK) && formController != null && !formController.isCurrentQuestionFirstInForm()) {
+                    backButton.callOnClick();
+                }
+                else {
+                    showIfNotShowing(QuitFormDialogFragment.class, getSupportFragmentManager());
+                }
                 return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if (event.isAltPressed() && !swipeHandler.beenSwiped()) {
@@ -2256,6 +2344,8 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                                 formControllerAvailable(formController);
                                 Intent intent = new Intent(this, FormHierarchyActivity.class);
                                 intent.putExtra(FormHierarchyActivity.EXTRA_SESSION_ID, sessionId);
+                                // WARNING: Custom ODK Changes
+                                intent.putExtra(FormHierarchyActivity.EXTRA_JUMP_TO_BEGINNING, getIntent().getBooleanExtra(FormHierarchyActivity.EXTRA_JUMP_TO_BEGINNING, false));
                                 startActivityForResult(intent, RequestCodes.HIERARCHY_ACTIVITY);
                             }
                         });
