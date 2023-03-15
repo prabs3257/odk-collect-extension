@@ -1046,8 +1046,18 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         if (itemId == R.id.menu_languages) {
             createLanguageDialog();
             return true;
-        } else if (itemId == R.id.menu_save) {// don't exit
-            saveForm(false, InstancesDaoHelper.isInstanceComplete(false, settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT), getFormController()), null, true);
+        } else if (itemId == R.id.menu_save) {
+            // WARNING: Custom ODK Change, exit on save
+            saveForm(
+                    settingsProvider.getProtectedSettings().getBoolean(ProtectedProjectKeys.KEY_EXIT_ON_SAVE),
+                    InstancesDaoHelper.isInstanceComplete(
+                            false,
+                            settingsProvider.getUnprotectedSettings().getBoolean(KEY_COMPLETED_DEFAULT),
+                            getFormController()
+                    ),
+                    null,
+                    true
+            );
             return true;
         }
 
@@ -2093,8 +2103,14 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                     DialogFragmentUtils.showIfNotShowing(RecordingWarningDialogFragment.class, getSupportFragmentManager());
                     return true;
                 }
-
-                showIfNotShowing(QuitFormDialogFragment.class, getSupportFragmentManager());
+                // WARNING: Custom ODK Changes, back button behaviour changed
+                FormController formController = getFormController();
+                if (!settingsProvider.getProtectedSettings().getBoolean(ProtectedProjectKeys.KEY_EXIT_ON_BACK) && formController != null && !formController.isCurrentQuestionFirstInForm()) {
+                    backButton.callOnClick();
+                }
+                else {
+                    showIfNotShowing(QuitFormDialogFragment.class, getSupportFragmentManager());
+                }
                 return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if (event.isAltPressed() && !swipeHandler.beenSwiped()) {

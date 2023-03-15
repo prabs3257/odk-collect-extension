@@ -336,6 +336,12 @@
         "save_by_default": {
           "type": "boolean"
         },
+        "exit_on_save": {
+          "type": "boolean"
+        },
+        "exit_on_back": {
+          "type": "boolean"
+        },
         "save_as": {
           "type": "boolean"
         },
