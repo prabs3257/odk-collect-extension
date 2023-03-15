@@ -11,6 +11,23 @@ import org.odk.collect.android.injection.config.DaggerAppDependencyComponent
 import org.odk.collect.android.storage.StoragePathProvider
 import org.odk.collect.permissions.PermissionsProvider
 
+/**
+ * ODKProvider is a helper utility class that provides access to various interfaces inside the
+ * Collect app module and extension module. This class provides a simplified way to retrieve objects
+ * of these interfaces without having to manually create instances of the corresponding classes.
+ *
+ * ODKProvider contains several methods that can be used to retrieve objects of different interfaces,
+ * such as FormsInteractor, FormInstanceInteractor, and FormsDatabaseInteractor, among others.
+ * These interfaces allow you to interact with different parts of the ODK system, such as forms,
+ * instances, and database.
+ *
+ *  The ODKProvider is implemented using the Singleton design pattern, meaning that there is only
+ *  one instance of it throughout the app's lifecycle. Make sure to call the init() method once
+ *  and pass an application context before trying to retrieve any objects.
+ *
+ *  @author Chinmoy Chakraborty
+ */
+
 object ODKProvider {
 
     private lateinit var application: Application

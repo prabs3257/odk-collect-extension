@@ -16,6 +16,8 @@ import java.util.*
 
 /** Responsible for configuring the odk.
  *  Consumes a json string consisting of the desired configuration.
+ *
+ *  @author Chinmoy Chakraborty
  */
 class ConfigHandler(private val application: Application) {
 
