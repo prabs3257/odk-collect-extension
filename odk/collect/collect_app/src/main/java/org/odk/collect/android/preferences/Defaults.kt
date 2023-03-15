@@ -55,6 +55,12 @@ object Defaults {
             hashMap[ProjectKeys.KEY_USGS_MAP_STYLE] = "topographic"
             hashMap[ProjectKeys.KEY_GOOGLE_MAP_STYLE] = GoogleMap.MAP_TYPE_NORMAL.toString()
             hashMap[ProjectKeys.KEY_MAPBOX_MAP_STYLE] = "mapbox://styles/mapbox/streets-v11"
+            hashMap[ProjectKeys.FORM_ACTIVITY_TOOLBAR_BACKGROUND_COLOR] = "#ffffff"
+            hashMap[ProjectKeys.FORM_ACTIVITY_TOOLBAR_FOREGROUND_COLOR] = "#000000"
+            hashMap[ProjectKeys.FORM_ACTIVITY_PRIMARY_COLOR] = "#ffffff"
+            hashMap[ProjectKeys.FORM_ACTIVITY_FOOTER_COLOR] = "#ffffff"
+            hashMap[ProjectKeys.FORM_ACTIVITY_NAVIGATION_BACKGROUND_COLOR] = "#00ffffff"
+            hashMap[ProjectKeys.FORM_ACTIVITY_NAVIGATION_FOREGROUND_COLOR] = "#000000"
             return hashMap
         }
 
