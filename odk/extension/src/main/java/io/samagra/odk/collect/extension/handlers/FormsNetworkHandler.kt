@@ -9,6 +9,7 @@ import io.samagra.odk.collect.extension.utilities.FormsDownloadUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.odk.collect.android.events.FormEventBus
 import org.odk.collect.android.formmanagement.FormDownloadException
 import org.odk.collect.android.formmanagement.ServerFormDetails
 import org.odk.collect.android.listeners.DownloadFormsTaskListener
@@ -128,6 +129,7 @@ class FormsNetworkHandler @Inject constructor(
         formsDownloadUtil.downloadFormsList { formList, exception ->
             if (exception != null || formList == null) {
                 listener.onCancelled(exception)
+                FormEventBus.formDownloadFailed(formId, exception.message ?: "Form list download failed!")
                 return@downloadFormsList
             }
             val requiredForms = ArrayList(formList.filter { form -> form.value.formId == formId }.values)

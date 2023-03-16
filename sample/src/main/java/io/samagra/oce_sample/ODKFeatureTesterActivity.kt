@@ -9,19 +9,18 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
-import io.samagra.odk.collect.extension.components.DaggerFormsDatabaseInteractorComponent
-import io.samagra.odk.collect.extension.components.DaggerFormsNetworkInteractorComponent
-import io.samagra.odk.collect.extension.components.DaggerODKInteractorComponent
 import io.samagra.odk.collect.extension.interactors.FormsDatabaseInteractor
 import io.samagra.odk.collect.extension.interactors.FormsNetworkInteractor
 import io.samagra.odk.collect.extension.interactors.ODKInteractor
 import io.samagra.odk.collect.extension.listeners.FileDownloadListener
-import io.samagra.odk.collect.extension.listeners.FormsProcessListener
 import io.samagra.odk.collect.extension.listeners.ODKProcessListener
+import io.samagra.odk.collect.extension.utilities.ODKProvider
 import org.apache.commons.io.IOUtils
+import org.odk.collect.android.events.FormEventBus
+import org.odk.collect.android.events.FormStateEvent
 import org.odk.collect.android.injection.config.DaggerAppDependencyComponent
-import org.odk.collect.forms.instances.InstancesRepository
 import timber.log.Timber
 import java.io.File
 
@@ -43,9 +42,10 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var odkInteractor: ODKInteractor
     private lateinit var networkInteractor: FormsNetworkInteractor
     private lateinit var formsDatabaseInteractor: FormsDatabaseInteractor
-    private lateinit var instancesRepository: InstancesRepository
 
     private lateinit var context: Context
+
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,15 +65,16 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
         openSavedInput = findViewById(R.id.open_saved_form_input)
         openSavedButton = findViewById(R.id.open_saved_form_button)
 
-        odkInteractor = DaggerODKInteractorComponent.factory().create(application).getODKInteractor()
+        ODKProvider.init(application)
+        odkInteractor = ODKProvider.getOdkInteractor()
         progressBar.visibility = View.VISIBLE
         odkInteractor.setupODK(IOUtils.toString(resources.openRawResource(R.raw.settings)), false, object :
             ODKProcessListener {
             override fun onProcessComplete() {
                 val currentProjectProvider = DaggerAppDependencyComponent.builder().application(application).build().currentProjectProvider()
                 currentProjectProvider.getCurrentProject().name
-                formsDatabaseInteractor = DaggerFormsDatabaseInteractorComponent.factory().create(application).getFormsDatabaseInteractor()
-                networkInteractor = DaggerFormsNetworkInteractorComponent.factory().create(application).getFormsNetworkInteractor()
+                formsDatabaseInteractor = ODKProvider.getFormsDatabaseInteractor()
+                networkInteractor = ODKProvider.getFormsNetworkInteractor()
                 progressBar.visibility = View.INVISIBLE
             }
             override fun onProcessingError(exception: Exception) {
@@ -89,6 +90,26 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
         clearAllFormsButton.setOnClickListener(this)
         showAllForms.setOnClickListener(this)
         openSavedButton.setOnClickListener(this)
+
+        setListeners()
+    }
+
+    private fun setListeners() {
+        compositeDisposable.add(
+            FormEventBus.getState().subscribe { event ->
+                when (event) {
+                    is FormStateEvent.OnFormDownloadFailed -> Timber.tag("FORM EVENT").d("Download for form %s failed. Reason: %s", event.formId, event.errorMessage)
+                    is FormStateEvent.OnFormDownloaded -> Timber.tag("FORM EVENT").d("Form downloaded with id: %s", event.formId)
+                    is FormStateEvent.OnFormOpenFailed -> Timber.tag("FORM EVENT").d("Form open failed for form %s. Reason: %s", event.formId, event.errorMessage)
+                    is FormStateEvent.OnFormOpened -> Timber.tag("FORM EVENT").d("Form with id: %s was opened", event.formId)
+                    is FormStateEvent.OnFormSaveError -> Timber.tag("FORM EVENT").d("Form with id: %s could not be saved. Reason: %s", event.formId, event.errorMessage)
+                    is FormStateEvent.OnFormSaved -> Timber.tag("FORM EVENT").d("Form with id: %s was saved. Saved instance path: %s", event.formId, event.instancePath)
+                    is FormStateEvent.OnFormUploadFailed -> Timber.tag("FORM EVENT").d("Form upload failed for form id: %s. Reason: %s", event.formId, event.errorMessage)
+                    is FormStateEvent.OnFormUploaded -> Timber.tag("FORM EVENT").d("Form with id: %s was uploaded", event.formId)
+                }
+                progressBar.visibility = View.INVISIBLE
+            }
+        )
     }
 
     override fun onClick(v: View?) {
@@ -97,18 +118,7 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
                 val formId: String = openFormsInput.text.toString().trim()
                 if (formId.isNotBlank()) {
                     progressBar.visibility = View.VISIBLE
-                    odkInteractor.openForm(formId, context, object : FormsProcessListener {
-                        override fun onProcessed() {
-                            progressBar.visibility = View.INVISIBLE
-                        }
-
-                        override fun onProcessingError(e: Exception) {
-                            progressBar.visibility = View.INVISIBLE
-                            Timber.e(e)
-                            showToast(e.message)
-                        }
-
-                    })
+                    odkInteractor.openForm(formId, context)
                 }
             }
             R.id.download_form_button -> {
@@ -174,18 +184,7 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
                 val formId: String = openSavedInput.text.toString().trim()
                 if (formId.isNotBlank()) {
                     progressBar.visibility = View.VISIBLE
-                    odkInteractor.openSavedForm(formId, context, object : FormsProcessListener {
-                        override fun onProcessed() {
-                            progressBar.visibility = View.INVISIBLE
-                        }
-
-                        override fun onProcessingError(e: Exception) {
-                            progressBar.visibility = View.INVISIBLE
-                            Timber.e(e)
-                            showToast(e.message)
-                        }
-
-                    })
+                    odkInteractor.openSavedForm(formId, context)
                 }
             }
         }
@@ -194,5 +193,10 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
     fun showToast(text: String?) {
         if (text != null)
             Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.clear()
     }
 }
