@@ -2,7 +2,9 @@ package io.samagra.odk.collect.extension.handlers
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
+import io.samagra.odk.collect.extension.interactors.FormInstanceInteractor
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.samagra.odk.collect.extension.components.DaggerFormInstanceInteractorComponent
 import io.samagra.odk.collect.extension.components.DaggerFormsDatabaseInteractorComponent
 import io.samagra.odk.collect.extension.components.DaggerFormsInteractorComponent
 import io.samagra.odk.collect.extension.components.DaggerFormsNetworkInteractorComponent
@@ -16,11 +18,9 @@ import io.samagra.odk.collect.extension.utilities.ConfigHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.odk.collect.android.activities.FormEntryActivity
-import org.odk.collect.android.activities.FormHierarchyActivity
-import org.odk.collect.android.external.InstancesContract
+import org.odk.collect.android.events.FormEventBus
+import org.odk.collect.android.events.FormStateEvent
 import org.odk.collect.android.injection.config.DaggerAppDependencyComponent
-import org.odk.collect.android.utilities.ApplicationConstants
 import org.odk.collect.forms.Form
 import org.odk.collect.forms.instances.Instance
 import org.odk.collect.forms.instances.InstancesRepository
@@ -36,6 +36,7 @@ class ODKHandler @Inject constructor(
     private lateinit var formsDatabaseInteractor: FormsDatabaseInteractor
     private lateinit var formsInteractor: FormsInteractor
     private lateinit var instancesRepository: InstancesRepository
+    private lateinit var formInstanceInteractor: FormInstanceInteractor
 
     override fun setupODK(settingsJson: String, lazyDownload: Boolean, listener: ODKProcessListener) {
         try {
@@ -44,6 +45,7 @@ class ODKHandler @Inject constructor(
             formsDatabaseInteractor = DaggerFormsDatabaseInteractorComponent.factory().create(application).getFormsDatabaseInteractor()
             formsInteractor = DaggerFormsInteractorComponent.factory().create(application).getFormsInteractor()
             instancesRepository = DaggerAppDependencyComponent.builder().application(application).build().instancesRepositoryProvider().get()
+            formInstanceInteractor = DaggerFormInstanceInteractorComponent.factory().create(application).getFormInstanceInteractor()
 
             if (!lazyDownload) {
                 formsNetworkInteractor.downloadRequiredForms(object: FileDownloadListener {
@@ -94,26 +96,28 @@ class ODKHandler @Inject constructor(
 
     override fun openSavedForm(formId: String, context: Context) {
         CoroutineScope(Job()).launch {
-            val formInstances = instancesRepository.getAllByFormId(formId)
-            var savedInstance: Instance? = null
-            for (instance in formInstances) {
-                if (instance.status == Instance.STATUS_INCOMPLETE) {
-                    savedInstance = instance
+            val compositeDisposable = CompositeDisposable()
+            compositeDisposable.add(
+                FormEventBus.getState()
+                .subscribe { event ->
+                    when (event) {
+                        is FormStateEvent.OnFormOpenFailed -> {
+                            if (event.formId == formId) {
+                                compositeDisposable.clear()
+                                openForm(formId, context)
+                            }
+                        }
+                        is FormStateEvent.OnFormOpened -> {
+                            if (event.formId == formId) {
+                                compositeDisposable.clear()
+                            }
+                        }
+                        else -> {}
+                    }
                 }
-            }
-            if (savedInstance == null) {
-                openForm(formId, context)
-            }
-            else {
-                val currentProjectProvider = DaggerAppDependencyComponent.builder().application(application).build().currentProjectProvider()
-                val instanceUri = InstancesContract.getUri(currentProjectProvider.getCurrentProject().uuid, savedInstance.dbId)
-                val intent = Intent(context, FormEntryActivity::class.java)
-                intent.action = Intent.ACTION_EDIT
-                intent.data = instanceUri
-                intent.putExtra(ApplicationConstants.BundleKeys.FORM_MODE, ApplicationConstants.FormModes.EDIT_SAVED)
-                intent.putExtra(FormHierarchyActivity.EXTRA_JUMP_TO_BEGINNING, true)
-                context.startActivity(intent)
-            }
+            )
+
+            formInstanceInteractor.openLatestSavedInstanceWithFormId(formId, context)
         }
     }
 
