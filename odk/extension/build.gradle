@@ -53,6 +53,8 @@ dependencies {
     implementation packages.androidx_lifecycle_viewmodel_ktx
     implementation packages.commons_io
     implementation packages.kotlinx_coroutines_android
+    implementation packages.rx_java
+    implementation packages.rx_android
     compileOnly packages.firebase_analytics
     compileOnly packages.firebase_storage
     compileOnly packages.firebase_config
