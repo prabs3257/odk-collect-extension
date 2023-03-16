@@ -17,8 +17,12 @@ class FormsInteractorModule {
     @Singleton
     @ODKFormsInteractor
     fun getODKFormsHandler(application: Application): FormsInteractor {
-        val currentProjectProvider = DaggerAppDependencyComponent.builder().application(application).build().currentProjectProvider()
+        val appDependencyComponent = DaggerAppDependencyComponent.builder().application(application).build()
+        val currentProjectProvider = appDependencyComponent.currentProjectProvider()
+        val mediaUtils = appDependencyComponent.providesMediaUtils()
+        val storagePathProvider = appDependencyComponent.storagePathProvider()
+        val entitiesRepository = appDependencyComponent.entitiesRepositoryProvider().get(currentProjectProvider.getCurrentProject().uuid)
         val formsDatabaseInteractor = DaggerFormsDatabaseInteractorComponent.factory().create(application).getFormsDatabaseInteractor()
-        return ODKFormsHandler(currentProjectProvider, formsDatabaseInteractor)
+        return ODKFormsHandler(currentProjectProvider, formsDatabaseInteractor, storagePathProvider, mediaUtils, entitiesRepository)
     }
 }
