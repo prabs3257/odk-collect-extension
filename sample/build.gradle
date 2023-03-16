@@ -280,6 +280,8 @@ dependencies {
     androidTestImplementation Dependencies.androidx_work_testing
     androidTestImplementation Dependencies.uiautomator
     implementation project(':odk:extension')
+    implementation "io.reactivex.rxjava3:rxjava:3.1.5"
+    implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
 
     // Real LeakCanary for debug builds only: notifications, analysis, etc
 //    debugImplementation Dependencies.leakcanary

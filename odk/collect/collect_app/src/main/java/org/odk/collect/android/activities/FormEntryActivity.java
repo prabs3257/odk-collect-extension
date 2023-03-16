@@ -99,6 +99,7 @@ import org.odk.collect.android.audio.AudioRecordingControllerFragment;
 import org.odk.collect.android.audio.M4AAppender;
 import org.odk.collect.android.backgroundwork.InstanceSubmitScheduler;
 import org.odk.collect.android.dao.helpers.InstancesDaoHelper;
+import org.odk.collect.android.events.FormEventBus;
 import org.odk.collect.android.exception.JavaRosaException;
 import org.odk.collect.android.external.FormsContract;
 import org.odk.collect.android.external.InstancesContract;
@@ -703,10 +704,12 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
             }
 
             formPath = candidateForms.get(0).getFormFilePath();
+            FormEventBus.INSTANCE.formOpened(instance.getFormId());
         } else if (uriMimeType != null && uriMimeType.equals(FormsContract.CONTENT_ITEM_TYPE)) {
             Form form = formsRepositoryProvider.get().get(ContentUriHelper.getIdFromUri(uri));
             if (form != null) {
                 formPath = form.getFormFilePath();
+                FormEventBus.INSTANCE.formOpened(form.getFormId());
             }
 
             if (formPath == null) {
@@ -1823,6 +1826,11 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                 DialogFragmentUtils.dismissDialog(SaveFormProgressDialogFragment.class, getSupportFragmentManager());
                 DialogFragmentUtils.dismissDialog(ChangesReasonPromptDialogFragment.class, getSupportFragmentManager());
 
+                Instance instance = new InstancesRepositoryProvider(this).get().getOneByPath(getAbsoluteInstancePath());
+                if (instance != null) {
+                    FormEventBus.INSTANCE.formSaved(instance.getFormId(), instance.getInstanceFilePath());
+                }
+
                 showShortToast(this, R.string.data_saved_ok);
 
                 if (result.getRequest().viewExiting()) {
@@ -1846,6 +1854,11 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                             + result.getMessage();
                 } else {
                     message = getString(R.string.data_saved_error);
+                }
+
+                instance = new InstancesRepositoryProvider(this).get().getOneByPath(getAbsoluteInstancePath());
+                if (instance != null) {
+                    FormEventBus.INSTANCE.formSaveError(instance.getFormId(), message);
                 }
 
                 showLongToast(this, message);

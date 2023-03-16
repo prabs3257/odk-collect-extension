@@ -4,8 +4,6 @@ apply from: '../../config/quality.gradle'
 apply from: '../../config/jacoco.gradle'
 apply from: '../../config/dependencies.gradle'
 
-import com.android.ddmlib.DdmPreferences
-
 // Build numbers were manually set until 1067
 def LEGACY_BUILD_NUMBER_OFFSET = 1067
 
@@ -181,6 +179,8 @@ dependencies {
     implementation packages.bikram_sambat
     implementation packages.rarepebble_colorpicker
     implementation packages.commons_io
+    implementation packages.rx_java
+    implementation packages.rx_android
     implementation(packages.opencsv) {
         exclude group: 'commons-logging'
     }

@@ -11,7 +11,6 @@ import io.samagra.odk.collect.extension.interactors.FormsInteractor
 import io.samagra.odk.collect.extension.interactors.FormsNetworkInteractor
 import io.samagra.odk.collect.extension.interactors.ODKInteractor
 import io.samagra.odk.collect.extension.listeners.FileDownloadListener
-import io.samagra.odk.collect.extension.listeners.FormsProcessListener
 import io.samagra.odk.collect.extension.listeners.ODKProcessListener
 import io.samagra.odk.collect.extension.utilities.ConfigHandler
 import kotlinx.coroutines.CoroutineScope
@@ -65,7 +64,7 @@ class ODKHandler @Inject constructor(
         CoroutineScope(Job()).launch{ ConfigHandler(application).reset(listener) }
     }
 
-    override fun openForm(formId: String, context: Context, listener: FormsProcessListener) {
+    override fun openForm(formId: String, context: Context) {
         CoroutineScope(Job()).launch {
             // Delete any saved instances of this form
             val savedInstances = instancesRepository.getAllByFormId(formId)
@@ -76,25 +75,24 @@ class ODKHandler @Inject constructor(
             }
             val requiredForm = formsDatabaseInteractor.getLatestFormById(formId)
             if (requiredForm == null) {
-                downloadAndOpenForm(formId, context, listener)
+                downloadAndOpenForm(formId, context)
             }
             else {
                 val xmlFile = File(requiredForm.formFilePath)
                 if (xmlFile.exists() && (requiredForm.formMediaPath == null || mediaExists(requiredForm))) {
-                    listener.onProcessed()
                     formsInteractor.openFormWithFormId(formId, context)
                 }
                 else {
                     requiredForm.formMediaPath?.let { File(it).deleteRecursively() }
                     xmlFile.delete()
                     formsDatabaseInteractor.deleteByFormId(formId)
-                    downloadAndOpenForm(formId, context, listener)
+                    downloadAndOpenForm(formId, context)
                 }
             }
         }
     }
 
-    override fun openSavedForm(formId: String, context: Context, listener: FormsProcessListener) {
+    override fun openSavedForm(formId: String, context: Context) {
         CoroutineScope(Job()).launch {
             val formInstances = instancesRepository.getAllByFormId(formId)
             var savedInstance: Instance? = null
@@ -104,7 +102,7 @@ class ODKHandler @Inject constructor(
                 }
             }
             if (savedInstance == null) {
-                openForm(formId, context, listener)
+                openForm(formId, context)
             }
             else {
                 val currentProjectProvider = DaggerAppDependencyComponent.builder().application(application).build().currentProjectProvider()
@@ -115,20 +113,14 @@ class ODKHandler @Inject constructor(
                 intent.putExtra(ApplicationConstants.BundleKeys.FORM_MODE, ApplicationConstants.FormModes.EDIT_SAVED)
                 intent.putExtra(FormHierarchyActivity.EXTRA_JUMP_TO_BEGINNING, true)
                 context.startActivity(intent)
-                listener.onProcessed()
             }
         }
     }
 
-    private fun downloadAndOpenForm(formId: String, context: Context, listener: FormsProcessListener) {
+    private fun downloadAndOpenForm(formId: String, context: Context) {
         formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
-            override fun onProgress(progress: Int) {}
             override fun onComplete(downloadedFile: File) {
-                listener.onProcessed()
                 formsInteractor.openFormWithFormId(formId, context)
-            }
-            override fun onCancelled(exception: Exception) {
-                listener.onProcessingError(exception)
             }
         })
     }
