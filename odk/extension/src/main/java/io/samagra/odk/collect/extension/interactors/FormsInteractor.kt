@@ -17,9 +17,35 @@ interface FormsInteractor {
     /** Opens a form with the given md5 hash. */
     fun openFormWithMd5Hash(md5Hash: String, context: Context)
 
-    /** Prefills the values of a form given a tag and value. */
-    fun updateForm(form: Form, tag: String, tagValue: String, listener: FormsProcessListener?)
+    /**
+     * This function is used to prefill a single form field.
+     * This function takes three parameters: the unique identifier of the ODK form,
+     * the tag or name of the form field, and the value to be pre-filled in the form field.
+     * Note: This creates a separate form instance of the original form and does not alter
+     * the original form in any way.
+     */
+    fun prefillForm(formId: String, tag: String, value: String)
 
-    /** Prefills the values of a form given a list of tags and values. */
-    fun updateForm(form: Form, values: HashMap<String, String>,listener: FormsProcessListener?)
+    /**
+     * This function is used to prefill multiple form fields.
+     * This function takes two parameters: the unique identifier of the ODK form
+     * and a map of tag-value pairs.
+     * Note: This creates a separate form instance of the original form and does not alter
+     * the original form in any way.
+     */
+    fun prefillForm(formId: String, tagValueMap: HashMap<String, String>)
+
+    /**
+     * Prefills the values of a form given a tag and value. The formPath may be the
+     * path of a form itself or an instance of a form.
+     * Note: This modifies the original form described by the form path.
+     */
+    fun updateForm(formPath: String, tag: String, tagValue: String, listener: FormsProcessListener?)
+
+    /**
+     * Prefills the values of a form given a list of tags and values. The formPath may be the
+     * path of a form itself or an instance of a form.
+     * Note: This modifies the original form described by the form path.
+     */
+    fun updateForm(formPath: String, values: HashMap<String, String>,listener: FormsProcessListener?)
 }
