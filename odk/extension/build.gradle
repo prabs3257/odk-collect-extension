@@ -44,6 +44,7 @@ dependencies {
     api project(":odk:collect:settings")
     api project(":odk:collect:permissions")
     api project(":odk:collect:strings")
+    implementation project(":odk:collect:analytics")
 
     implementation packages.androidx_core_ktx
     implementation packages.androidx_appcompat
@@ -55,6 +56,13 @@ dependencies {
     implementation packages.kotlinx_coroutines_android
     implementation packages.rx_java
     implementation packages.rx_android
+    implementation(packages.javarosa) {
+        exclude group: 'commons-io'
+        exclude group: 'joda-time'
+        exclude group: 'org.slf4j'
+        exclude group: 'org.hamcrest', module: 'hamcrest-all'
+    }
+    implementation project(path: ':odk:collect:entities')
     compileOnly packages.firebase_analytics
     compileOnly packages.firebase_storage
     compileOnly packages.firebase_config

@@ -6,10 +6,23 @@ import android.util.Log
 import io.samagra.odk.collect.extension.interactors.FormsDatabaseInteractor
 import io.samagra.odk.collect.extension.interactors.FormsInteractor
 import io.samagra.odk.collect.extension.listeners.FormsProcessListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import org.javarosa.core.model.FormDef
 import org.odk.collect.android.activities.FormEntryActivity
+import org.odk.collect.android.events.FormEventBus
 import org.odk.collect.android.external.FormsContract
+import org.odk.collect.android.formentry.loading.FormInstanceFileCreator
+import org.odk.collect.android.formentry.saving.DiskFormSaver
+import org.odk.collect.android.listeners.FormLoaderListener
 import org.odk.collect.android.projects.CurrentProjectProvider
+import org.odk.collect.android.storage.StoragePathProvider
+import org.odk.collect.android.tasks.FormLoaderTask
+import org.odk.collect.android.tasks.SaveFormToDisk
 import org.odk.collect.android.utilities.ApplicationConstants
+import org.odk.collect.android.utilities.MediaUtils
+import org.odk.collect.entities.EntitiesRepository
 import org.odk.collect.forms.Form
 import org.w3c.dom.Document
 import java.io.File
@@ -22,8 +35,11 @@ import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
 class ODKFormsHandler @Inject constructor(
-        private val currentProjectProvider: CurrentProjectProvider,
-        private val formsDatabaseInteractor: FormsDatabaseInteractor
+    private val currentProjectProvider: CurrentProjectProvider,
+    private val formsDatabaseInteractor: FormsDatabaseInteractor,
+    private val storagePathProvider: StoragePathProvider,
+    private val mediaUtils: MediaUtils,
+    private val entitiesRepository: EntitiesRepository
 ): FormsInteractor {
 
     override fun openFormWithFormId(formId: String, context: Context) {
@@ -46,6 +62,59 @@ class ODKFormsHandler @Inject constructor(
         openForm(form, context)
     }
 
+    override fun prefillForm(formId: String, tagValueMap: HashMap<String, String>) {
+        CoroutineScope(Job()).launch {
+            val form = formsDatabaseInteractor.getLatestFormById(formId)
+            val formInstanceUri = FormsContract.getUri(currentProjectProvider.getCurrentProject().uuid, form?.dbId)
+            if (form != null && formInstanceUri != null) {
+                val formLoaderTask = FormLoaderTask(null, null, null)
+                formLoaderTask.setFormLoaderListener(object: FormLoaderListener {
+                    override fun onProgressStep(stepMessage: String?) {}
+                    override fun loadingComplete(task: FormLoaderTask?, fd: FormDef?, warningMsg: String?) {
+                        val formController = formLoaderTask.formController
+                        if (formController != null) {
+                            val formInstanceFileCreator = FormInstanceFileCreator(
+                                storagePathProvider
+                            ) { System.currentTimeMillis() }
+                            val instanceFile = formInstanceFileCreator.createInstanceFile(form.formFilePath)
+                            if (instanceFile != null) {
+                                formController.setInstanceFile(instanceFile)
+                                val saveToDiskResult = DiskFormSaver().save(
+                                    formInstanceUri, formController, mediaUtils, false,
+                                    false, null, {}, null, arrayListOf(),
+                                    currentProjectProvider.getCurrentProject().uuid, entitiesRepository
+                                )
+                                if (saveToDiskResult.saveResult == SaveFormToDisk.SAVED) {
+                                    updateForm(instanceFile.absolutePath, tagValueMap, null)
+                                    FormEventBus.formSaved(formId, instanceFile.absolutePath)
+                                }
+                                else {
+                                    FormEventBus.formSaveError(formId, "Form could not be saved!")
+                                }
+                            } else {
+                                FormEventBus.formOpenFailed(formId, "Form instance could not be created!")
+                            }
+                        }
+                        else {
+                            FormEventBus.formOpenFailed(formId, "FormController is null!")
+                        }
+                    }
+                    override fun loadingError(errorMsg: String?) {
+                        FormEventBus.formOpenFailed(formId, errorMsg ?: "Form cannot be loaded!")
+                    }
+                })
+                formLoaderTask.execute(form.formFilePath)
+            }
+            else {
+                FormEventBus.formOpenFailed(formId, "Form does not exist in database!")
+            }
+        }
+    }
+
+    override fun prefillForm(formId: String, tag: String, value: String) {
+        prefillForm(formId, hashMapOf(tag to value))
+    }
+
     private fun openForm(form: Form, context: Context) {
         val contentUri = FormsContract.getUri(currentProjectProvider.getCurrentProject().uuid, form.dbId)
         val formEntryIntent = Intent(context, FormEntryActivity::class.java)
@@ -58,8 +127,7 @@ class ODKFormsHandler @Inject constructor(
         context.startActivity(formEntryIntent)
     }
 
-    override fun updateForm(form: Form, tag: String, tagValue: String, listener: FormsProcessListener?) {
-        val formPath: String = form.formFilePath
+    override fun updateForm(formPath: String, tag: String, tagValue: String, listener: FormsProcessListener?) {
         var fos: FileOutputStream? = null
         try {
             val factory = DocumentBuilderFactory.newInstance()
@@ -89,14 +157,10 @@ class ODKFormsHandler @Inject constructor(
         }
     }
 
-    override fun updateForm(
-        form: Form,
-        values: HashMap<String, String>,
-        listener: FormsProcessListener?
-    ) {
+    override fun updateForm(formPath: String, values: HashMap<String, String>, listener: FormsProcessListener?) {
         var progress = 0
         for (entry in values.entries) {
-            updateForm(form, entry.key, entry.value, object : FormsProcessListener {
+            updateForm(formPath, entry.key, entry.value, object : FormsProcessListener {
                 override fun onProcessed() {
                     progress++
                     if (progress == values.size)
