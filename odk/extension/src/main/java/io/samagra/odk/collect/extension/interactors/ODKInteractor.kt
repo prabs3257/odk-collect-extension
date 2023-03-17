@@ -27,8 +27,8 @@ interface ODKInteractor {
 
     /** Opens the latest version related to the formId. Deletes any
      *  saved instance of a form with this particular formId. */
-    fun openForm(formId: String, context: Context, listener: FormsProcessListener)
+    fun openForm(formId: String, context: Context)
 
     /** Opens a saved form. If no saved instance is found, opens a new form. */
-    fun openSavedForm(formId: String, context: Context, listener: FormsProcessListener)
+    fun openSavedForm(formId: String, context: Context)
 }
