@@ -121,6 +121,32 @@ class ODKHandler @Inject constructor(
         }
     }
 
+    override fun prefillAndOpenForm(formId: String, tagValueMap: HashMap<String, String>, context: Context) {
+        CoroutineScope(Job()).launch {
+            val compositeDisposable = CompositeDisposable()
+            compositeDisposable.add(FormEventBus.getState().subscribe { event ->
+                when (event) {
+                    is FormStateEvent.OnFormSaved -> {
+                        if (event.formId == formId) {
+                            val prefilledInstance = formInstanceInteractor.getInstanceByPath(event.instancePath)
+                            if (prefilledInstance != null) {
+                                formInstanceInteractor.openInstance(prefilledInstance, context)
+                            }
+                            else {
+                                FormEventBus.formOpenFailed(formId, "Form instance cannot be found!")
+                            }
+                            compositeDisposable.clear()
+                        }
+                    }
+                    is FormStateEvent.OnFormOpenFailed -> if (event.formId == formId) compositeDisposable.clear()
+                    is FormStateEvent.OnFormSaveError -> if (event.formId == formId) compositeDisposable.clear()
+                    else -> {}
+                }
+            })
+            formsInteractor.prefillForm(formId, tagValueMap)
+        }
+    }
+
     private fun downloadAndOpenForm(formId: String, context: Context) {
         formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
             override fun onComplete(downloadedFile: File) {
