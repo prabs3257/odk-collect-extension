@@ -63,7 +63,6 @@ dependencies {
 }
 
 ext {
-    // Provide your own coordinates here
     PUBLISH_GROUP_ID = 'io.samagra'
     PUBLISH_VERSION = '0.0.1'
     PUBLISH_ARTIFACT_ID = 'odk-collect-extension'
