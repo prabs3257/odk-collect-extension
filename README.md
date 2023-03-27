@@ -96,8 +96,12 @@ embed ODK directly into them.
   ```
 
 4. Add `odk:extension` module dependency to your app's module
-   `implementation project(':odk:extension')`
-7. Build your project
+
+```gradle
+implementation project(':odk:extension')
+```
+
+5. Build your project
 
 ### via Gradle dependency
 
