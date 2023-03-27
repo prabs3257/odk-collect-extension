@@ -47,12 +47,65 @@ embed ODK directly into them.
 
 ## Versions
 
-* Current version: TBA
+* Current version: 0.0.1
     * Based on ODK Release: [v2022.4.4](https://github.com/getodk/collect/releases/tag/v2022.4.4)
 
 ## Integration
 
-TBA
+### via Module
+
+1. Download
+   the [ODK module](https://github.com/Samagra-Development/odk-collect-extension/tree/main/odk).
+2. Copy the directory in your project folder.
+3. Update your app's `settings.gradle` to include the ODK modules.
+
+  ```gradle
+  include ':odk:collect:projects'
+  include ':odk:collect:formstest'
+  include ':odk:collect:shared'
+  include ':odk:collect:forms'
+  include ':odk:collect:analytics'
+  include ':odk:collect:androidshared'
+  include ':odk:collect:audiorecorder'
+  include ':odk:collect:testshared'
+  include ':odk:collect:audioclips'
+  include ':odk:collect:strings'
+  include ':odk:collect:async'
+  include ':odk:collect:collect_app'
+  include ':odk:collect:nbistubs'
+  include ':odk:collect:material'
+  include ':odk:collect:fragmentstest'
+  include ':odk:collect:location'
+  include ':odk:collect:geo'
+  include ':odk:collect:errors'
+  include ':odk:collect:externalapp'
+  include ':odk:collect:upgrade'
+  include ':odk:collect:permissions'
+  include ':odk:collect:imageloader'
+  include ':odk:collect:glide'
+  include ':odk:collect:androidtest'
+  include ':odk:collect:settings'
+  include ':odk:collect:servicetest'
+  include ':odk:collect:maps'
+  include ':odk:collect:osmdroid'
+  include ':odk:collect:icons'
+  include ':odk:collect:crash-handler'
+  include ':odk:collect:entities'
+  include ':odk:collect:selfie-camera'
+  include ':odk:extension'
+  ```
+
+4. Add `odk:extension` module dependency to your app's module
+   `implementation project(':odk:extension')`
+7. Build your project
+
+### via Gradle dependency
+
+**Coming soon**
+
+### Usage
+
+Wiki coming soon
 
 ## Need
 
