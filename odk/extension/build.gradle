@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.kezong.fat-aar'
 }
 
 apply from: '../config/dependencies.gradle'
@@ -37,13 +38,34 @@ android {
 }
 
 dependencies {
-    
-    api project(":odk:collect:collect_app")
-    api project(":odk:collect:forms")
-    api project(":odk:collect:projects")
-    api project(":odk:collect:settings")
-    api project(":odk:collect:permissions")
-    api project(":odk:collect:strings")
+    implementation fileTree(dir: 'libs', include: '*.jar')
+
+    embed project(path: ':odk:collect:projects')
+    embed project(path: ':odk:collect:shared')
+    embed project(path: ':odk:collect:forms')
+    embed project(path: ':odk:collect:analytics')
+    embed project(path: ':odk:collect:androidshared')
+    embed project(path: ':odk:collect:audiorecorder')
+    embed project(path: ':odk:collect:audioclips')
+    embed project(path: ':odk:collect:strings')
+    embed project(path: ':odk:collect:async')
+    embed project(path: ':odk:collect:collect_app')
+    embed project(path: ':odk:collect:nbistubs')
+    embed project(path: ':odk:collect:material')
+    embed project(path: ':odk:collect:location')
+    embed project(path: ':odk:collect:geo')
+    embed project(path: ':odk:collect:errors')
+    embed project(path: ':odk:collect:externalapp')
+    embed project(path: ':odk:collect:upgrade')
+    embed project(path: ':odk:collect:permissions')
+    embed project(path: ':odk:collect:imageloader')
+    embed project(path: ':odk:collect:settings')
+    embed project(path: ':odk:collect:maps')
+    embed project(path: ':odk:collect:osmdroid')
+    embed project(path: ':odk:collect:icons')
+    embed project(path: ':odk:collect:crash-handler')
+    embed project(path: ':odk:collect:entities')
+    embed project(path: ':odk:collect:selfie-camera')
 
     implementation packages.androidx_core_ktx
     implementation packages.androidx_appcompat
@@ -64,7 +86,7 @@ dependencies {
 
 ext {
     PUBLISH_GROUP_ID = 'io.samagra'
-    PUBLISH_VERSION = '0.0.1'
+    PUBLISH_VERSION = '0.0.1.1'
     PUBLISH_ARTIFACT_ID = 'odk-collect-extension'
 }
 
