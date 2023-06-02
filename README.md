@@ -45,6 +45,8 @@ ODK Collect is a standalone Android application which can be communicated via in
 ODK Collect Extension is a library which can be integrated into any existing Android application to
 embed ODK directly into them.
 
+## [Installation Set-Up Guide](./INITIAL-SETUP.md)
+
 ## Versions
 
 * Current version: 0.0.1
