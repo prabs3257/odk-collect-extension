@@ -37,6 +37,7 @@ docker --version && docker compose version
     ```
 * Make the following changes in `.env` file
     * Change the ``Domain`` value to your machine's local IP address. For Eg. DOMAIN=192.168.29.147. 
+    * You can check your ip by running the command `ifconfig`. If you're using ethernet, it should probably be named similar to `eth*`; if you're on WLAN network, it should be `wlo*`.
     * Change the ``SSL_TYPE`` value to selfsign
     * Hold Ctrl and press x to quit the text editor. Press y to indicate that you want to save the file, and then press Enter to confirm the file name. Do not change the file name.
 
@@ -100,7 +101,7 @@ If you are on macOS you need to do the following additional changes:
     ```
     docker compose build
     ```
-    When it finishes, you should see some "Successfully built" type text 
+    When it finishes, you should see some "Successfully built" type text. Make sure that you do not have any service running on your local port 80.
 
 * Start the server you just created. If its the first time its going to take a while to get ready
 
@@ -217,14 +218,13 @@ Congratulations!! Now your ODK Central server is up and ready. Now you need to c
     ```
 * Next you need to create the `settings.json`. create this file inside the sample/src/main/res/raw. Use [this](https://docs.getodk.org/collect-import-export/#list-of-keys-for-all-settings) to create this file. 
 
-* For the `server-url`.
-    open your server -> create a project -> create a user
-create a form inside the project and go to form access tab
-check the checkbox on your created user
-go to user access tab, you'll see that there is a generate QR code option
-you need to scan this QR on odk collect app (available on playstore)
-once you scan this QR you'll setup a project on odk collect app. Go to settings and then project management. You'll see a server url there
-copy that url and paste it in your settings file. Url should look something like this https://192.169.29.147:443/v1/key/jP5eczJBZq08ECf9OKoNJGwjx55wBa3cpHkJ0r5dPQYEXcXM8uzBOTi38E9NPX$t/projects/2. <br>
+* For the `server-url`. Follow these instructions:
+
+    * open your server -> create a project -> create a user create a form inside the project
+    * go to form access tab check the checkbox on your created user
+    * go to user access tab, you'll see that there is a generate QR code option you need to scan this QR on odk collect app (available on playstore) once you scan this QR you'll setup a project on odk collect app. 
+    * Go to settings and then project management. You'll see a server url there
+    * copy that url and paste it in your settings file. Url should look something like this https://192.169.29.147:443/v1/key/jP5eczJBZq08ECf9OKoNJGwjx55wBa3cpHkJ0r5dPQYEXcXM8uzBOTi38E9NPX$t/projects/2. <br>
 Instead of 192.169.29.147 it should be your local machine's IP
 
 Now you need to add the CA you previously created to your android emulator so that the device knows its a trusted CA.
