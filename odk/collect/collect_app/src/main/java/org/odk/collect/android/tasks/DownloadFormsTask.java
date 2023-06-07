@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Background task for downloading a given list of forms. We assume right now that the forms are
@@ -99,6 +100,12 @@ public class DownloadFormsTask extends
             index++;
         }
         executorService.shutdown();
+        // Wait for all tasks to complete
+        try {
+            executorService.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         return results;
     }

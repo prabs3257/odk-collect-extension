@@ -99,7 +99,7 @@ public class ServerFormDownloader implements FormDownloader {
             // if we've downloaded a duplicate, this gives us the file
             fileResult = downloadXform(fd.getFormName(), fd.getDownloadUrl(), stateListener, tempDir, formsDirPath);
             // download media files if there are any
-            lock.lock();
+            lock.unlock();
             if (fd.getManifest() != null && !fd.getManifest().getMediaFiles().isEmpty()) {
                 FormMediaDownloader mediaDownloader = new FormMediaDownloader(formsRepository, formSource);
                 newAttachmentsDetected = mediaDownloader.download(fd, fd.getManifest().getMediaFiles(), tempMediaPath, tempDir, stateListener);
@@ -107,8 +107,10 @@ public class ServerFormDownloader implements FormDownloader {
         } catch (FormDownloadException.DownloadingInterrupted | InterruptedException e) {
             Timber.i(e);
             cleanUp(fileResult, tempMediaPath);
+            lock.unlock();
             throw new FormDownloadException.DownloadingInterrupted();
         } catch (IOException e) {
+            lock.unlock();
             throw new FormDownloadException.DiskError();
         }
 
@@ -141,10 +143,12 @@ public class ServerFormDownloader implements FormDownloader {
         }
 
         try {
+            lock.lock();
             installEverything(tempMediaPath, fileResult, parsedFields, formsDirPath, newAttachmentsDetected);
             lock.unlock();
         } catch (FormDownloadException.DiskError e) {
             cleanUp(fileResult, tempMediaPath);
+            lock.unlock();
             throw e;
         }
     }
@@ -249,7 +253,7 @@ public class ServerFormDownloader implements FormDownloader {
      */
     private FileResult downloadXform(String formName, String url, OngoingWorkListener stateListener, File tempDir, String formsDirPath) throws FormSourceException, IOException, FormDownloadException.DownloadingInterrupted, InterruptedException {
         InputStream xform = formSource.fetchForm(url);
-
+        lock.lock();
         String fileName = getFormFileName(formName, formsDirPath);
         File tempFormFile = new File(tempDir + File.separator + fileName);
         interuptablyWriteFile(xform, tempFormFile, tempDir, stateListener);
