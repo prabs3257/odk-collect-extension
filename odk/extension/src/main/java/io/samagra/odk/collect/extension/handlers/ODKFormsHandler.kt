@@ -72,6 +72,35 @@ class ODKFormsHandler @Inject constructor(
         openForm(form, context)
     }
 
+
+    private fun checkForm(formId: String, tagValueMap: HashMap<String, String>){
+        val form = formsDatabaseInteractor.getLatestFormById(formId)
+
+        if(form == null){
+            formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
+                override fun onComplete(downloadedFile: File) {
+                    prefillForm(formId,tagValueMap);
+                }
+            })
+        }else{
+            val xmlFile = File(form.formFilePath)
+            if (xmlFile.exists() && (form.formMediaPath == null || mediaExists(form))) {
+                prefillForm(formId,tagValueMap);
+            }else {
+                form.formMediaPath?.let { File(it).deleteRecursively() }
+                xmlFile.delete()
+                formsDatabaseInteractor.deleteByFormId(formId)
+
+                formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
+                    override fun onComplete(downloadedFile: File) {
+                        prefillForm(formId,tagValueMap);
+                    }
+                })
+            }
+
+        }
+    }
+
     override fun prefillForm(formId: String, tagValueMap: HashMap<String, String>) {
         CoroutineScope(Job()).launch {
             val form = formsDatabaseInteractor.getLatestFormById(formId)
@@ -275,7 +304,7 @@ class ODKFormsHandler @Inject constructor(
                     else -> {}
                 }
             })
-            prefillForm(formId, tagValueMap)
+            checkForm(formId, tagValueMap)
         }
     }
 
