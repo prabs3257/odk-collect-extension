@@ -73,29 +73,19 @@ class ODKFormsHandler @Inject constructor(
     }
 
 
-    private fun checkForm(formId: String, tagValueMap: HashMap<String, String>){
-        val form = formsDatabaseInteractor.getLatestFormById(formId)
+    private fun checkForm(form: Form?) : Boolean{
 
         if(form == null){
-            formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
-                override fun onComplete(downloadedFile: File) {
-                    prefillForm(formId,tagValueMap);
-                }
-            })
+            return false;
         }else{
             val xmlFile = File(form.formFilePath)
             if (xmlFile.exists() && (form.formMediaPath == null || mediaExists(form))) {
-                prefillForm(formId,tagValueMap);
+                return true;
             }else {
                 form.formMediaPath?.let { File(it).deleteRecursively() }
                 xmlFile.delete()
-                formsDatabaseInteractor.deleteByFormId(formId)
-
-                formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
-                    override fun onComplete(downloadedFile: File) {
-                        prefillForm(formId,tagValueMap);
-                    }
-                })
+                formsDatabaseInteractor.deleteByFormId(form.formId)
+                return false;
             }
 
         }
@@ -237,21 +227,14 @@ class ODKFormsHandler @Inject constructor(
                 }
             }
             val requiredForm = formsDatabaseInteractor.getLatestFormById(formId)
-            if (requiredForm == null) {
+
+            if(checkForm(requiredForm)){
+                openFormWithFormId(formId, context)
+            }else{
                 downloadAndOpenForm(formId, context)
             }
-            else {
-                val xmlFile = File(requiredForm.formFilePath)
-                if (xmlFile.exists() && (requiredForm.formMediaPath == null || mediaExists(requiredForm))) {
-                    openFormWithFormId(formId, context)
-                }
-                else {
-                    requiredForm.formMediaPath?.let { File(it).deleteRecursively() }
-                    xmlFile.delete()
-                    formsDatabaseInteractor.deleteByFormId(formId)
-                    downloadAndOpenForm(formId, context)
-                }
-            }
+
+
         }
     }
 
@@ -304,7 +287,16 @@ class ODKFormsHandler @Inject constructor(
                     else -> {}
                 }
             })
-            checkForm(formId, tagValueMap)
+            val form = formsDatabaseInteractor.getLatestFormById(formId)
+            if(checkForm(form)){
+                prefillForm(formId,tagValueMap);
+            }else{
+                formsNetworkInteractor.downloadFormById(formId, object : FileDownloadListener {
+                    override fun onComplete(downloadedFile: File) {
+                        prefillForm(formId,tagValueMap);
+                    }
+                })
+            }
         }
     }
 
