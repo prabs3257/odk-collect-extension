@@ -117,11 +117,6 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
                     is FormStateEvent.OnFormSubmitted -> {
                         val i = Intent(this@ODKFeatureTesterActivity, JSONViewActivity::class.java)
                         i.putExtra("jsonData", event.jsonData)
-//                        val filePaths: ArrayList<String> = ArrayList()
-//                        for(f in event.files){
-//                            filePaths.add(f.absolutePath)
-//                        }
-//                        i.putExtra("files", filePaths)
                         startActivity(i)
                         Timber.tag("FORM EVENT").d("Form with id: %s was submitted and converted json data: %s", event.formId, event.jsonData)
                     }

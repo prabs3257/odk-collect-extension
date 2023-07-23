@@ -20,28 +20,6 @@ class JSONViewActivity : AppCompatActivity() {
             var JsonTV : TextView = findViewById(R.id.tv_json)
             JsonTV.text = jsonData;
 
-//            val filePaths = extras.getStringArrayList("files")
-//
-//            if (filePaths != null) {
-//                for(path in filePaths){
-//                    Log.d("XML Error:", filePaths[0].toString());
-//                    val imageView = ImageView(this@JSONViewActivity)
-//                    val bitmap = BitmapFactory.decodeFile(path)
-//                    imageView.setImageBitmap(bitmap)
-//                    val layoutParams = LinearLayout.LayoutParams(
-//                        LinearLayout.LayoutParams.WRAP_CONTENT,
-//                        LinearLayout.LayoutParams.WRAP_CONTENT
-//                    )
-//                    imageView.layoutParams = layoutParams
-//
-//                    val parentLayout: LinearLayout = findViewById(R.id.cl_parentLayout)
-//                    parentLayout.addView(imageView)
-//
-//                }
-//            }
-
-
-
         }
     }
 }
