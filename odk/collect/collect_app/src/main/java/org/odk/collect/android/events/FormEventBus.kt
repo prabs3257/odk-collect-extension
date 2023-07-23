@@ -19,6 +19,10 @@ object FormEventBus: ODKEventBus<FormStateEvent>() {
         state.onNext(FormStateEvent.OnFormSaved(formId, instancePath))
     }
 
+    fun formSubmitted(formId: String, jsonData: String, ) {
+        state.onNext(FormStateEvent.OnFormSubmitted(formId, jsonData))
+    }
+
      fun formSaveError(formId: String, errorMessage: String) {
         state.onNext(FormStateEvent.OnFormSaveError(formId, errorMessage))
     }
@@ -49,6 +53,9 @@ sealed class FormStateEvent {
 
     /** Called when a form is saved. */
     data class OnFormSaved(val formId: String, val instancePath: String): FormStateEvent()
+
+    /** Called when a form is submitted. */
+    data class OnFormSubmitted(val formId: String, val jsonData: String): FormStateEvent()
 
     /** Called when a form save process errors out. */
     data class OnFormSaveError(val formId: String, val errorMessage: String): FormStateEvent()
