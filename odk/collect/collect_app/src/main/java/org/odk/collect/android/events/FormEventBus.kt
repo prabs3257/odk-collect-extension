@@ -19,7 +19,7 @@ object FormEventBus: ODKEventBus<FormStateEvent>() {
         state.onNext(FormStateEvent.OnFormSaved(formId, instancePath))
     }
 
-    fun formSubmitted(formId: String, jsonData: String, ) {
+    fun formSubmitted(formId: String, jsonData: String) {
         state.onNext(FormStateEvent.OnFormSubmitted(formId, jsonData))
     }
 
