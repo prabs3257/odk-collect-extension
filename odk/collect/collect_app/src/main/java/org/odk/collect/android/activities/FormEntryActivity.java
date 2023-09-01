@@ -1836,6 +1836,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                     String convertedJson = XmlToJsonConvertUtil.convertToJson(XMLString,instanceFile);
                     FormEventBus.INSTANCE.formSubmitted(instance.getFormId(), convertedJson);
                     FormEventBus.INSTANCE.formSaved(instance.getFormId(), instance.getInstanceFilePath());
+                    FormEventBus.INSTANCE.formCompleted(instance);
                 }
 
                 showShortToast(this, R.string.data_saved_ok);

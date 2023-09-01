@@ -1,5 +1,6 @@
 package org.odk.collect.android.events
 
+import org.odk.collect.forms.instances.Instance
 /**
  * Events exporter class for form events. This class contains all the
  * events that occur during the lifecycle of a form.
@@ -21,6 +22,10 @@ object FormEventBus: ODKEventBus<FormStateEvent>() {
 
     fun formSubmitted(formId: String, jsonData: String) {
         state.onNext(FormStateEvent.OnFormSubmitted(formId, jsonData))
+    }
+
+    fun formCompleted(instance: Instance) {
+        state.onNext(FormStateEvent.OnFormCompleted(instance))
     }
 
      fun formSaveError(formId: String, errorMessage: String) {
@@ -56,6 +61,9 @@ sealed class FormStateEvent {
 
     /** Called when a form is submitted. */
     data class OnFormSubmitted(val formId: String, val jsonData: String): FormStateEvent()
+
+    /** Called when a form is completed. */
+    data class OnFormCompleted(val instance:Instance): FormStateEvent()
 
     /** Called when a form save process errors out. */
     data class OnFormSaveError(val formId: String, val errorMessage: String): FormStateEvent()

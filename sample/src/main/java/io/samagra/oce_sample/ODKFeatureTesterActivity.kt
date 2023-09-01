@@ -120,6 +120,9 @@ class ODKFeatureTesterActivity : AppCompatActivity(), View.OnClickListener {
                         startActivity(i)
                         Timber.tag("FORM EVENT").d("Form with id: %s was submitted and converted json data: %s", event.formId, event.jsonData)
                     }
+                    is FormStateEvent.OnFormCompleted -> {
+                        Timber.tag("FORM EVENT").d("Form completed with path: %s", event.instance.instanceFilePath)
+                    }
                 }
                 progressBar.visibility = View.INVISIBLE
             }
